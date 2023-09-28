@@ -1,60 +1,60 @@
-import React, { useState, useEffect } from "react";
+import React, { useState} from "react";
+import { useLocalStorage } from "./LocalStorage";
+
 
 const TodoApp = () => {
-  const [todos, setTodos] = useState([]);
-  const [inputValue, setInputValue] = useState("");
+        const [todos, setTodos] = useLocalStorage("todos", []);
+        const [inputValue, setInputValue] = useState("");
 
-  useEffect(() => {
-    localStorage.setItem("todos", JSON.stringify(todos));
-  }, [todos]);
+        const handleInputChange = (e) => {
+            setInputValue(e.target.value);
+        };
 
+        const handleKeyPress = (e) => {
+            if (e.key === "Enter") {
+            createTodo();
+            }
+        };
 
-    const storedTodos = JSON.parse(localStorage.getItem("todos")) || [];
+        const createTodo = () => {
+            if (inputValue.trim() !== "") {
+            const newTodo = {
+                id: Date.now(),
+                text: inputValue,
+                completed: false,
+            };
+            setTodos((prevTodos) => [...prevTodos, newTodo]);
+            setInputValue("");
+            }
+        };
 
-    useEffect(() => {
-         setTodos(storedTodos.reverse()); // Reverse storedTodos when initializing
-    }, []);
+      
+        const markTodoComplete = (id) => {
+            const updatedTodos = todos.map((todo) => {
+              if (todo.id === id) {
+                return { ...todo, completed: true };
+              }
+              return todo;
+            });
+          
+            // Reorder the completed todos to add the most recent one at the beginning
+            const updatedCompletedTodos = [
+              ...updatedTodos.filter((todo) => todo.completed).reverse(),
+              ...updatedTodos.filter((todo) => !todo.completed)
+            ];
+          
+            setTodos(updatedCompletedTodos);
+            localStorage.setItem("todos", JSON.stringify(updatedCompletedTodos));
+          };
+          
 
-  const handleInputChange = (e) => {
-    setInputValue(e.target.value);
-  };
+        const resetTodos = () => {
+            setTodos([]);
+            localStorage.removeItem("todos");
+        };
 
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      createTodo();
-    }
-  };
-
-  const createTodo = () => {
-    if (inputValue.trim() !== "") {
-      const newTodo = {
-        id: Date.now(),
-        text: inputValue,
-        completed: false,
-      };
-      setTodos((prevTodos) => [...prevTodos, newTodo]);
-      setInputValue("");
-    }
-  };
-
-  const markTodoComplete = (id) => {
-    const updatedTodos = todos.map((todo) => {
-      if (todo.id === id) {
-        return { ...todo, completed: true };
-      }
-      return todo;
-    });
-    setTodos(updatedTodos);
-    localStorage.setItem("todos", JSON.stringify(updatedTodos));
-  };
-
-  const resetTodos = () => {
-    setTodos([]);
-    localStorage.removeItem("todos");
-  };
-
-  const activeTodos = todos.filter((todo) => !todo.completed).reverse();
-  const completedTodos = todos.filter((todo) => todo.completed);
+        const activeTodos = todos.filter((todo) => !todo.completed).reverse();
+        const completedTodos = todos.filter((todo) => todo.completed);
 
   return (
     <div>
